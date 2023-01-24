@@ -1,0 +1,78 @@
+namespace: mirror-maker 
+zk_apps:
+  zookeeper:
+    name: zookeeper
+    image:
+      repository: confluentinc/cp-zookeeper
+      tag: 7.0.1
+    replicaCount: 1
+    #Minimum resources requirement for mirror maker
+    resources:
+      requests:
+        memory: "1024Mi"
+        cpu: "0.1"
+      limits:
+        memory: "1024Mi"
+        cpu: "0.3"
+    podAnnotations: {} 
+    ports:
+      - name: "http-client"
+        port: 22181
+      - name: "http-servera"
+        port: 22888
+      - name: "http-serverb"
+        port: 23888
+    envVars:
+      - name: ZOOKEEPER_CLIENT_PORT
+        value: 22181
+      - name: ZOOKEEPER_INIT_LIMIT
+        value: 5
+      - name: ZOOKEEPER_SERVERS
+        value: zookeeper:22888:23888
+      - name: ZOOKEEPER_SERVER_ID
+        value: 1
+      - name: ZOOKEEPER_SYNC_LIMIT
+        value: 2
+      - name: ZOOKEEPER_TICK_TIME
+        value: 2000
+mm_apps:
+  mirror-maker:
+    name: mirror-maker
+    image:
+      #Change the image repository and tag as per setup
+      repository: mirror-maker
+      tag: latest
+    replicaCount: 1
+    #Minimum resources requirement for mirror maker
+    resources:
+      requests:
+        memory: "1024Mi"
+        cpu: "0.1"
+      limits:
+        memory: "1024Mi"
+        cpu: "0.3"
+    podAnnotations: {}
+    ports:
+      - name: "http-servera"
+        port: 9091
+        targetPort: 9091
+      - name: "http-serverb"
+        port: 29096
+        targetPort: 29096
+    envVars:
+         - name: ALLOW_PLAINTEXT_LISTENER
+           value: "yes"
+         - name: KAFKA_ADVERTISED_LISTENERS
+           value: PLAINTEXT://mirror-maker:29096,PLAINTEXT_HOST://localhost:9091
+         - name: KAFKA_AUTO_OFFSET_RESET
+           value: latest
+         - name: KAFKA_BROKER_ID
+           value: "4"
+         - name: KAFKA_LISTENERS
+           value: PLAINTEXT://:29096,PLAINTEXT_HOST://:9091
+         - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+           value: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+         - name: KAFKA_ZOOKEEPER_CONNECT
+           value: zookeeper:22181
+         - name: KAFKA_LOG4J_OPTS
+           value: -Dlog4j.configuration=file:/etc/kafka/connect-log4j.properties

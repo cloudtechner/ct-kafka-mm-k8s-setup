@@ -1,0 +1,10 @@
+{{- range $app_name, $app := .Values.mm_apps }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    {{- include "app.labels" $ | nindent 4 }}
+    app.kubernetes.io/name: "{{ include "app.fullname" $ }}-{{ $app_name }}"
+  name: {{ $.Values.namespace }}
+{{ end -}}

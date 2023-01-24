@@ -1,0 +1,59 @@
+{{- range $app_name, $app := .Values.mm_apps }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{- include "app.labels" $ | nindent 4 }}
+    app.kubernetes.io/name: "{{ include "app.fullname" $ }}-{{ $app_name }}"
+  name: {{ $app.name }}
+  namespace: {{ $.Values.namespace }}
+spec:
+  replicas: {{ $app.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "app.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/name: "{{ include "app.fullname" $ }}-{{ $app_name }}"
+  template:
+    metadata:
+      {{- with $app.podAnnotations }}
+      annotations: 
+        {{- toYaml . | nindent 8 }}
+      {{ end }}
+      labels: 
+        {{- include "app.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/name: "{{ include "app.fullname" $ }}-{{ $app_name }}"
+    spec:
+      containers:
+        - name : {{ $app.name }}
+          envFrom:
+          - configMapRef:
+              name: "{{ $app.name }}-config"
+          image: "{{ $app.image.repository }}:{{ $app.image.tag }}"
+          {{- if $app.resources }}
+          resources:
+          {{- else }}
+          resources:
+            requests:
+              memory: "1024Mi"
+              cpu: "0.1"
+            limits:
+              memory: "1024Mi"
+              cpu: "0.3"
+          {{- end }}
+          volumeMounts:
+            - mountPath: /data
+              name: {{ $app.name }}
+            - mountPath: /opt/kafka/config/
+              name: "{{ $app.name }}-props" 
+      hostname: {{ $app.name }}
+      restartPolicy: Always
+      volumes:
+        - name: {{ $app.name}}
+          persistentVolumeClaim:
+            claimName: "{{ $app.name }}-claim0"
+        - name: "{{ $app.name }}-props"
+          configMap:
+            name: "{{ $app.name }}-props-config"
+status: {}
+{{ end -}}

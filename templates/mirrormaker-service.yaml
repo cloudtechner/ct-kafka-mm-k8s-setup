@@ -1,0 +1,23 @@
+{{- range $app_name, $app := .Values.mm_apps }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    {{- include "app.labels" $ | nindent 4 }}
+    app.kubernetes.io/name: "{{ include "app.fullname" $ }}-{{ $app_name }}"
+  name: "{{ $app.name }}-service"
+  namespace: {{ $.Values.namespace }}
+spec:
+  ports:
+   {{- range $i, $port := $app.ports }}
+    - name: {{ $port.name | quote }}
+      port: {{ $port.port }}
+      targetPort: {{ $port.port }}
+      protocol: TCP
+  {{ end -}}
+  selector:
+    io.kompose.service: {{ $app.name }}
+status:
+  loadBalancer: {}
+{{ end -}}

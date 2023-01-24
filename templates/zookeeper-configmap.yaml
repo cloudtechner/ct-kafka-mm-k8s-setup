@@ -1,0 +1,15 @@
+{{- range $app_name, $app := .Values.zk_apps }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ $app.name }}-config"
+  namespace: {{ $.Values.namespace }}
+  annotations:
+    strategy.spinnaker.io/versioned: "false"
+data: 
+  {{- range $i, $env := $app.envVars }}
+  {{ $env.name }}: {{ quote $env.value -}}
+  {{ end -}}
+{{ end -}}
+

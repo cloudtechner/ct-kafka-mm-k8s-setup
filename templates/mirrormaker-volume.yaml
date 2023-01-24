@@ -1,0 +1,19 @@
+{{- range $app_name, $app := .Values.mm_apps }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    {{- include "app.labels" $ | nindent 4 }}
+    app.kubernetes.io/name: "{{ include "app.fullname" $ }}-{{ $app_name }}"
+  name: "{{ $app.name }}-claim0"
+  namespace: {{ $.Values.namespace }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+{{ end -}}

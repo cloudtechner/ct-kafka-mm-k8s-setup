@@ -1,0 +1,13 @@
+{{- range $app_name, $app := .Values.mm_apps }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ $app.name }}-props-config"
+  namespace: {{ $.Values.namespace }}
+  annotations:
+    strategy.spinnaker.io/versioned: "false"
+{{ end -}}
+data:
+  mm2.properties: |-
+{{ .Files.Get "mm2.properties" | indent 4 }}
